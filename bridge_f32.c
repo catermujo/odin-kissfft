@@ -1,0 +1,5 @@
+#define CATERMUJO_KISSFFT_SCALAR float
+#define CATERMUJO_KISSFFT_COMPLEX catermujo_kissfft_complex_f32
+#define CATERMUJO_KISSFFT_NAME catermujo_kissfft_f32
+#include "bridge_impl.h"
+

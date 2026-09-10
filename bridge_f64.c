@@ -1,0 +1,5 @@
+#define CATERMUJO_KISSFFT_SCALAR double
+#define CATERMUJO_KISSFFT_COMPLEX catermujo_kissfft_complex_f64
+#define CATERMUJO_KISSFFT_NAME catermujo_kissfft_f64
+#include "bridge_impl.h"
+
