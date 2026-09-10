@@ -33,14 +33,20 @@ if /I not "%SOURCE_COMMIT%"=="%REVISION%" (
     echo KISS FFT source checkout does not match pinned commit: %REVISION% 1>&2
     exit /b 1
 )
+set "SOURCE_DIRTY="
+for /f "delims=" %%I in ('git -C "%SOURCE_DIR%" status --porcelain --untracked-files=no') do set "SOURCE_DIRTY=1"
+if defined SOURCE_DIRTY (
+    echo KISS FFT source checkout has staged or unstaged tracked modifications 1>&2
+    exit /b 1
+)
 
 set "BUILD_DIR=%BASE%build_windows_%VENDOR_WINDOWS_ARCH%"
 set "OUTPUT_DIR=%BASE%windows_%VENDOR_WINDOWS_ARCH%"
 if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
-cl /nologo /std:c11 /O2 /DNDEBUG /I"%BASE%" /c "%BASE%bridge_f32.c" /Fo"%BUILD_DIR%\bridge_f32.obj" || exit /b 1
-cl /nologo /std:c11 /O2 /DNDEBUG /I"%BASE%" /c "%BASE%bridge_f64.c" /Fo"%BUILD_DIR%\bridge_f64.obj" || exit /b 1
-lib /nologo /OUT:"%OUTPUT_DIR%\kissfft.lib" "%BUILD_DIR%\bridge_f32.obj" "%BUILD_DIR%\bridge_f64.obj" || exit /b 1
+cl /nologo /std:c11 /O2 /Brepro /DNDEBUG /I"%BASE%" /c "%BASE%bridge_f32.c" /Fo"%BUILD_DIR%\bridge_f32.obj" || exit /b 1
+cl /nologo /std:c11 /O2 /Brepro /DNDEBUG /I"%BASE%" /c "%BASE%bridge_f64.c" /Fo"%BUILD_DIR%\bridge_f64.obj" || exit /b 1
+lib /nologo /Brepro /OUT:"%OUTPUT_DIR%\kissfft.lib" "%BUILD_DIR%\bridge_f32.obj" "%BUILD_DIR%\bridge_f64.obj" || exit /b 1
 
 echo KISS FFT static build completed successfully!
 exit /b 0

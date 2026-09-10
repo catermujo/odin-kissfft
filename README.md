@@ -9,7 +9,9 @@ symbol with `catermujo_kissfft_`.
 
 Run `build.sh` on Darwin or Linux, or `build.bat` from a Visual Studio developer
 shell on Windows. Both scripts reject an existing source checkout at any other
-revision.
+revision or with staged or unstaged tracked modifications. Untracked upstream
+build outputs do not affect source verification. Static archive metadata is
+normalized for reproducible builds.
 
 ```odin
 import fft "ext:kissfft"

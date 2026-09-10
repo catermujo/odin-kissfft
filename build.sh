@@ -8,6 +8,7 @@ REVISION=e5e3fac46e0d94a8f8170c06706b7a4218828333
 REMOTE=https://github.com/mborgerding/kissfft.git
 CC="${CC:-cc}"
 AR="${AR:-ar}"
+LIBTOOL="${LIBTOOL:-libtool}"
 
 case "$(uname -s):$(uname -m)" in
     Darwin:arm64 | Darwin:aarch64) PLATFORM=darwin_arm64; LIB_NAME=kissfft.darwin.a ;;
@@ -19,7 +20,11 @@ esac
 
 command -v git >/dev/null 2>&1 || { echo "Missing required command: git" >&2; exit 1; }
 command -v "$CC" >/dev/null 2>&1 || { echo "Missing required C compiler: $CC" >&2; exit 1; }
-command -v "$AR" >/dev/null 2>&1 || { echo "Missing required archiver: $AR" >&2; exit 1; }
+if [ "$(uname -s)" = Darwin ]; then
+    command -v "$LIBTOOL" >/dev/null 2>&1 || { echo "Missing required static librarian: $LIBTOOL" >&2; exit 1; }
+else
+    command -v "$AR" >/dev/null 2>&1 || { echo "Missing required archiver: $AR" >&2; exit 1; }
+fi
 
 if [ -e "$SOURCE_DIR" ] && [ ! -d "$SOURCE_DIR/.git" ]; then
     echo "KISS FFT source path exists but is not a git checkout: $SOURCE_DIR" >&2
@@ -33,12 +38,21 @@ if [ "$(git -C "$SOURCE_DIR" rev-parse HEAD)" != "$REVISION" ]; then
     echo "KISS FFT source checkout does not match pinned commit: $REVISION" >&2
     exit 1
 fi
+if [ -n "$(git -C "$SOURCE_DIR" status --porcelain --untracked-files=no)" ]; then
+    echo "KISS FFT source checkout has staged or unstaged tracked modifications" >&2
+    exit 1
+fi
 
 BUILD_DIR="$BASE/build_$PLATFORM"
 OUTPUT_DIR="$BASE/$PLATFORM"
 mkdir -p "$BUILD_DIR" "$OUTPUT_DIR"
 "$CC" -std=c11 -O3 -DNDEBUG -fPIC -I"$BASE" -c "$BASE/bridge_f32.c" -o "$BUILD_DIR/bridge_f32.o"
 "$CC" -std=c11 -O3 -DNDEBUG -fPIC -I"$BASE" -c "$BASE/bridge_f64.c" -o "$BUILD_DIR/bridge_f64.o"
-"$AR" rcs "$OUTPUT_DIR/$LIB_NAME" "$BUILD_DIR/bridge_f32.o" "$BUILD_DIR/bridge_f64.o"
+if [ "$(uname -s)" = Darwin ]; then
+    ZERO_AR_DATE=1 "$LIBTOOL" -static -D -o "$OUTPUT_DIR/$LIB_NAME" \
+        "$BUILD_DIR/bridge_f32.o" "$BUILD_DIR/bridge_f64.o"
+else
+    "$AR" rcsD "$OUTPUT_DIR/$LIB_NAME" "$BUILD_DIR/bridge_f32.o" "$BUILD_DIR/bridge_f64.o"
+fi
 
 echo "KISS FFT static build completed successfully!"
