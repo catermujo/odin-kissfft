@@ -42,4 +42,3 @@ mkdir -p "$BUILD_DIR" "$OUTPUT_DIR"
 "$AR" rcs "$OUTPUT_DIR/$LIB_NAME" "$BUILD_DIR/bridge_f32.o" "$BUILD_DIR/bridge_f64.o"
 
 echo "KISS FFT static build completed successfully!"
-

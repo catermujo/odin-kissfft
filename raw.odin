@@ -63,4 +63,3 @@ foreign lib {
         output_count: c.size_t,
     ) -> c.int ---
 }
-

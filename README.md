@@ -32,4 +32,3 @@ into powers of 2, 3, and 5. Inverse transforms are not normalized; divide every
 result by plan length for a conventional round trip.
 
 KISS FFT and this binding are distributed under BSD-3-Clause. See `LICENSE`.
-

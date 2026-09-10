@@ -44,4 +44,3 @@ lib /nologo /OUT:"%OUTPUT_DIR%\kissfft.lib" "%BUILD_DIR%\bridge_f32.obj" "%BUILD
 
 echo KISS FFT static build completed successfully!
 exit /b 0
-
