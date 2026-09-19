@@ -4,7 +4,8 @@ setlocal EnableDelayedExpansion
 set "REVISION=e5e3fac46e0d94a8f8170c06706b7a4218828333"
 set "REMOTE=https://github.com/mborgerding/kissfft.git"
 set "BASE=%~dp0"
-set "SOURCE_DIR=%BASE%kissfft"
+set "BASE=%BASE:~0,-1%"
+set "SOURCE_DIR=%BASE%\kissfft"
 set "VENDOR_WINDOWS_ARCH=%VSCMD_ARG_TGT_ARCH%"
 if not defined VENDOR_WINDOWS_ARCH set "VENDOR_WINDOWS_ARCH=%PROCESSOR_ARCHITECTURE%"
 if /I "%VENDOR_WINDOWS_ARCH%"=="AMD64" set "VENDOR_WINDOWS_ARCH=x64"
@@ -40,12 +41,12 @@ if defined SOURCE_DIRTY (
     exit /b 1
 )
 
-set "BUILD_DIR=%BASE%build_windows_%VENDOR_WINDOWS_ARCH%"
-set "OUTPUT_DIR=%BASE%windows_%VENDOR_WINDOWS_ARCH%"
+set "BUILD_DIR=%BASE%\build_windows_%VENDOR_WINDOWS_ARCH%"
+set "OUTPUT_DIR=%BASE%\windows_%VENDOR_WINDOWS_ARCH%"
 if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
-cl /nologo /std:c11 /O2 /Brepro /DNDEBUG /I"%BASE%" /c "%BASE%bridge_f32.c" /Fo"%BUILD_DIR%\bridge_f32.obj" || exit /b 1
-cl /nologo /std:c11 /O2 /Brepro /DNDEBUG /I"%BASE%" /c "%BASE%bridge_f64.c" /Fo"%BUILD_DIR%\bridge_f64.obj" || exit /b 1
+cl /nologo /std:c11 /O2 /Brepro /DNDEBUG /I"%BASE%" /c "%BASE%\bridge_f32.c" /Fo"%BUILD_DIR%\bridge_f32.obj" || exit /b 1
+cl /nologo /std:c11 /O2 /Brepro /DNDEBUG /I"%BASE%" /c "%BASE%\bridge_f64.c" /Fo"%BUILD_DIR%\bridge_f64.obj" || exit /b 1
 lib /nologo /Brepro /OUT:"%OUTPUT_DIR%\kissfft.lib" "%BUILD_DIR%\bridge_f32.obj" "%BUILD_DIR%\bridge_f64.obj" || exit /b 1
 
 echo KISS FFT static build completed successfully!
