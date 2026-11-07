@@ -41,6 +41,78 @@ Plan_F64 :: struct {
     direction: Direction,
 }
 
+Real_Plan_F32 :: struct {
+    handle: rawptr,
+    length: int,
+}
+
+Real_Plan_F64 :: struct {
+    handle: rawptr,
+    length: int,
+}
+
+create_real_f32 :: proc(length: int) -> (plan: Real_Plan_F32, err: Error) {
+    if length < 2 || length > int(max(c.int)) || length % 2 != 0 {
+        return {}, .invalid_length
+    }
+    status := Error(f32_real_plan_create(c.int(length), &plan.handle))
+    if status != .none do return {}, status
+    plan.length = length
+    return plan, .none
+}
+
+create_real_f64 :: proc(length: int) -> (plan: Real_Plan_F64, err: Error) {
+    if length < 2 || length > int(max(c.int)) || length % 2 != 0 {
+        return {}, .invalid_length
+    }
+    status := Error(f64_real_plan_create(c.int(length), &plan.handle))
+    if status != .none do return {}, status
+    plan.length = length
+    return plan, .none
+}
+
+destroy_real_f32 :: proc(plan: ^Real_Plan_F32) {
+    if plan == nil do return
+    f32_real_plan_destroy(&plan.handle)
+    plan^ = {}
+}
+
+destroy_real_f64 :: proc(plan: ^Real_Plan_F64) {
+    if plan == nil do return
+    f64_real_plan_destroy(&plan.handle)
+    plan^ = {}
+}
+
+transform_real_f32 :: proc(plan: ^Real_Plan_F32, input: []f32, output: []Complex_F32) -> Error {
+    if plan == nil || plan.handle == nil do return .invalid_plan
+    if len(input) != plan.length do return .input_length_mismatch
+    if len(output) != plan.length / 2 + 1 do return .output_length_mismatch
+    return Error(
+        f32_real_transform(
+            plan.handle,
+            raw_data(input),
+            c.size_t(len(input)),
+            raw_data(output),
+            c.size_t(len(output)),
+        ),
+    )
+}
+
+transform_real_f64 :: proc(plan: ^Real_Plan_F64, input: []f64, output: []Complex_F64) -> Error {
+    if plan == nil || plan.handle == nil do return .invalid_plan
+    if len(input) != plan.length do return .input_length_mismatch
+    if len(output) != plan.length / 2 + 1 do return .output_length_mismatch
+    return Error(
+        f64_real_transform(
+            plan.handle,
+            raw_data(input),
+            c.size_t(len(input)),
+            raw_data(output),
+            c.size_t(len(output)),
+        ),
+    )
+}
+
 create_f32 :: proc(length: int, direction: Direction) -> (plan: Plan_F32, err: Error) {
     if length < 2 || length > int(max(c.int)) {
         return {}, .invalid_length
@@ -99,13 +171,9 @@ transform_f32 :: proc(plan: ^Plan_F32, input, output: []Complex_F32) -> Error {
     if len(output) != plan.length {
         return .output_length_mismatch
     }
-    return Error(f32_transform(
-        plan.handle,
-        raw_data(input),
-        c.size_t(len(input)),
-        raw_data(output),
-        c.size_t(len(output)),
-    ))
+    return Error(
+        f32_transform(plan.handle, raw_data(input), c.size_t(len(input)), raw_data(output), c.size_t(len(output))),
+    )
 }
 
 transform_f64 :: proc(plan: ^Plan_F64, input, output: []Complex_F64) -> Error {
@@ -118,14 +186,22 @@ transform_f64 :: proc(plan: ^Plan_F64, input, output: []Complex_F64) -> Error {
     if len(output) != plan.length {
         return .output_length_mismatch
     }
-    return Error(f64_transform(
-        plan.handle,
-        raw_data(input),
-        c.size_t(len(input)),
-        raw_data(output),
-        c.size_t(len(output)),
-    ))
+    return Error(
+        f64_transform(plan.handle, raw_data(input), c.size_t(len(input)), raw_data(output), c.size_t(len(output))),
+    )
 }
 
-destroy :: proc{destroy_f32, destroy_f64}
-transform :: proc{transform_f32, transform_f64}
+destroy :: proc {
+    destroy_f32,
+    destroy_f64,
+    destroy_real_f32,
+    destroy_real_f64,
+}
+transform :: proc {
+    transform_f32,
+    transform_f64,
+}
+transform_real :: proc {
+    transform_real_f32,
+    transform_real_f64,
+}

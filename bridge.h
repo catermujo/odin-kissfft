@@ -50,6 +50,26 @@ int32_t catermujo_kissfft_f64_transform(
     size_t output_count
 );
 
+int32_t catermujo_kissfft_f32_real_plan_create(int32_t length, void **out_plan);
+void catermujo_kissfft_f32_real_plan_destroy(void **plan);
+int32_t catermujo_kissfft_f32_real_transform(
+    void *plan,
+    const float *input,
+    size_t input_count,
+    catermujo_kissfft_complex_f32 *output,
+    size_t output_count
+);
+
+int32_t catermujo_kissfft_f64_real_plan_create(int32_t length, void **out_plan);
+void catermujo_kissfft_f64_real_plan_destroy(void **plan);
+int32_t catermujo_kissfft_f64_real_transform(
+    void *plan,
+    const double *input,
+    size_t input_count,
+    catermujo_kissfft_complex_f64 *output,
+    size_t output_count
+);
+
 #ifdef __cplusplus
 }
 #endif

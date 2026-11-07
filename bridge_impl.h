@@ -24,11 +24,15 @@
 #define kiss_fft_stride CATERMUJO_KISSFFT_SYMBOL(_core_transform_stride)
 #define kiss_fft_cleanup CATERMUJO_KISSFFT_SYMBOL(_core_cleanup)
 #define kiss_fft_next_fast_size CATERMUJO_KISSFFT_SYMBOL(_core_next_fast_size)
+#define kiss_fftr_alloc CATERMUJO_KISSFFT_SYMBOL(_real_core_alloc)
+#define kiss_fftr CATERMUJO_KISSFFT_SYMBOL(_real_core_transform)
+#define kiss_fftri CATERMUJO_KISSFFT_SYMBOL(_real_core_inverse)
 #if defined(__clang__) || defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #endif
 #include "kissfft/kiss_fft.c"
+#include "kissfft/kiss_fftr.c"
 #if defined(__clang__) || defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
@@ -37,6 +41,11 @@ typedef struct {
     kiss_fft_cfg configuration;
     int32_t length;
 } CATERMUJO_KISSFFT_SYMBOL(_plan);
+
+typedef struct {
+    kiss_fftr_cfg configuration;
+    int32_t length;
+} CATERMUJO_KISSFFT_SYMBOL(_real_plan);
 
 _Static_assert(sizeof(kiss_fft_cpx) == sizeof(CATERMUJO_KISSFFT_COMPLEX), "complex ABI size mismatch");
 _Static_assert(_Alignof(kiss_fft_cpx) == _Alignof(CATERMUJO_KISSFFT_COMPLEX), "complex ABI alignment mismatch");
@@ -95,6 +104,72 @@ int32_t CATERMUJO_KISSFFT_SYMBOL(_plan_create)(int32_t length, int32_t inverse, 
     }
     plan->length = length;
     *out_plan = plan;
+    return CATERMUJO_KISSFFT_OK;
+}
+
+int32_t CATERMUJO_KISSFFT_SYMBOL(_real_plan_create)(int32_t length, void **out_plan) {
+    if (out_plan == NULL) {
+        return CATERMUJO_KISSFFT_INVALID_PLAN;
+    }
+    *out_plan = NULL;
+    if (length < 2 || (length % 2) != 0) {
+        return CATERMUJO_KISSFFT_INVALID_LENGTH;
+    }
+    if (!CATERMUJO_KISSFFT_SYMBOL(_length_is_supported)(length)) {
+        return CATERMUJO_KISSFFT_UNSUPPORTED_LENGTH;
+    }
+    CATERMUJO_KISSFFT_SYMBOL(_real_plan) *plan = malloc(sizeof(*plan));
+    if (plan == NULL) {
+        return CATERMUJO_KISSFFT_ALLOCATION_FAILED;
+    }
+    plan->configuration = CATERMUJO_KISSFFT_SYMBOL(_real_core_alloc)(length, 0, NULL, NULL);
+    if (plan->configuration == NULL) {
+        free(plan);
+        return CATERMUJO_KISSFFT_ALLOCATION_FAILED;
+    }
+    plan->length = length;
+    *out_plan = plan;
+    return CATERMUJO_KISSFFT_OK;
+}
+
+void CATERMUJO_KISSFFT_SYMBOL(_real_plan_destroy)(void **opaque_plan) {
+    if (opaque_plan == NULL || *opaque_plan == NULL) {
+        return;
+    }
+    CATERMUJO_KISSFFT_SYMBOL(_real_plan) *plan = *opaque_plan;
+    free(plan->configuration);
+    free(plan);
+    *opaque_plan = NULL;
+}
+
+int32_t CATERMUJO_KISSFFT_SYMBOL(_real_transform)(
+    void *opaque_plan,
+    const CATERMUJO_KISSFFT_SCALAR *input,
+    size_t input_count,
+    CATERMUJO_KISSFFT_COMPLEX *output,
+    size_t output_count
+) {
+    if (opaque_plan == NULL) {
+        return CATERMUJO_KISSFFT_INVALID_PLAN;
+    }
+    CATERMUJO_KISSFFT_SYMBOL(_real_plan) *plan = opaque_plan;
+    if (input_count != (size_t)plan->length) {
+        return CATERMUJO_KISSFFT_INPUT_LENGTH_MISMATCH;
+    }
+    if (output_count != (size_t)plan->length / 2 + 1) {
+        return CATERMUJO_KISSFFT_OUTPUT_LENGTH_MISMATCH;
+    }
+    if (input == NULL || output == NULL) {
+        return CATERMUJO_KISSFFT_INVALID_PLAN;
+    }
+    uintptr_t input_begin = (uintptr_t)input;
+    uintptr_t input_end = input_begin + input_count * sizeof(*input);
+    uintptr_t output_begin = (uintptr_t)output;
+    uintptr_t output_end = output_begin + output_count * sizeof(*output);
+    if (input_begin < output_end && output_begin < input_end) {
+        return CATERMUJO_KISSFFT_OVERLAPPING_BUFFERS;
+    }
+    CATERMUJO_KISSFFT_SYMBOL(_real_core_transform)(plan->configuration, input, (kiss_fft_cpx *)output);
     return CATERMUJO_KISSFFT_OK;
 }
 
