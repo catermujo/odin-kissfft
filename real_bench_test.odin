@@ -33,7 +33,7 @@ benchmark_real_and_complex_2048 :: proc(t: ^testing.T) {
     elapsed: [2]time.Duration
     failures := 0
     for batch in 0 ..< BATCHES {
-        // DUMBAI: Alternate order after warmup so neither path always inherits the hotter CPU and cache.
+        // Alternate order after warmup so neither path always inherits the hotter CPU and cache.
         for position in 0 ..< 2 {
             path := (batch + position) % 2
             start := time.tick_now()

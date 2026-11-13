@@ -82,7 +82,7 @@ real_plan_validates_sizes_and_overlap :: proc(t: ^testing.T) {
     testing.expect_value(t, transform_real(&plan, input[:7], output[:]), .input_length_mismatch)
     testing.expect_value(t, transform_real(&plan, input[:], output[:4]), .output_length_mismatch)
     shared: [10]f32
-    // DUMBAI: Deliberately alias the two ABI buffers to check the native range validation.
+    // Deliberately alias the two ABI buffers to check the native range validation.
     aliased := (cast([^]Complex_F32)raw_data(shared[:]))[:5]
     testing.expect_value(t, transform_real(&plan, shared[:8], aliased), .overlapping_buffers)
     destroy(&plan)

@@ -43,7 +43,7 @@ same unnormalized scale as the complex forward transform.
 ```odin
 plan, err := fft.create_real_f32(2048)
 if err != .none {
-    // DUMBAI: Handle invalid size or allocation failure.
+    // Handle invalid size or allocation failure.
 }
 defer fft.destroy(&plan)
 
